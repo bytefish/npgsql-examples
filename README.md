@@ -18,7 +18,7 @@ It starts a local PostgreSQL 16 instance listening `localhost:5432` using userna
 
 ### Start the .NET Application ###
 
-Start the .NET application, the Connection String (given in the `appsettings.json`) already points to the local Postgres instance.
+Start the .NET application, the connection string (given in the `appsettings.json`) already points to the local Postgres instance.
 
 ### Using psql to update the data ###
 
