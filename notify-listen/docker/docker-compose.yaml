@@ -1,0 +1,27 @@
+version: '3.8'
+
+networks:
+  services:
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    networks:
+      - services
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - "./postgres/postgres.conf:/usr/local/etc/postgres/postgres.conf"
+      - ../sql/gitclub.sql:/docker-entrypoint-initdb.d/1-gitclub.sql
+      - ../sql/gitclub-notifications.sql:/docker-entrypoint-initdb.d/2-gitclub-notifications.sql
+      - ../sql/gitclub-data.sql:/docker-entrypoint-initdb.d/3-gitclub-data.sql
+    command: "postgres -c config_file=/usr/local/etc/postgres/postgres.conf"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
