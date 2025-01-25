@@ -14,7 +14,7 @@ Start by switching to `notify-listen/docker` and run:
 docker compose up
 ```
 
-It starts a local PostgreSQL 16 instance listening `localhost:5432` using username `postgres` and password `password`.
+It starts a local PostgreSQL 16 instance listening on `localhost:5432` using username `postgres` and password `password`.
 
 ### Start the .NET Application ###
 
