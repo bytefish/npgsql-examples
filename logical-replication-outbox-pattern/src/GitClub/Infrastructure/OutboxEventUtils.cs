@@ -1,6 +1,7 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using GitClub.Database.Models;
+using GitClub.Infrastructure.Authentication;
 using System.Text.Json;
 
 namespace GitClub.Infrastructure
@@ -15,15 +16,15 @@ namespace GitClub.Infrastructure
         /// </summary>
         /// <typeparam name="TMessageType">Type of the Message</typeparam>
         /// <param name="message">Message Payload</param>
-        /// <param name="lastEditedBy">User that created the Outbox Event</param>
+        /// <param name="currentUser">User that created the Outbox Event</param>
         /// <returns>An <see cref="OutboxEvent"/> that could be used</returns>
-        public static OutboxEvent Create<TMessageType>(TMessageType message, int lastEditedBy)
+        public static OutboxEvent Create<TMessageType>(TMessageType message, CurrentUser currentUser)
         {
             var outboxEvent = new OutboxEvent
             {
                 EventType = typeof(TMessageType).FullName!,
                 Payload = JsonSerializer.SerializeToDocument(message),
-                LastEditedBy = lastEditedBy
+                LastEditedBy = currentUser.UserId
             };
 
             return outboxEvent;

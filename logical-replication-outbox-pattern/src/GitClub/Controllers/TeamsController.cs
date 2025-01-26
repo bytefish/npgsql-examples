@@ -26,7 +26,7 @@ namespace GitClub.Controllers
         {
             _logger.TraceMethodEntry();
 
-            var team = await teamService.GetTeamByIdAsync(id, currentUser, cancellationToken);
+            Team team = await teamService.GetTeamByIdAsync(id, currentUser, cancellationToken);
 
             return Ok(team);
         }

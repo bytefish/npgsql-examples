@@ -26,7 +26,7 @@ namespace GitClub.Services
         {
             _logger.TraceMethodEntry();
 
-            using var applicationDbContext = await _dbContextFactory
+            using ApplicationDbContext applicationDbContext = await _dbContextFactory
                 .CreateDbContextAsync(cancellationToken)
                 .ConfigureAwait(false);
 
@@ -38,11 +38,13 @@ namespace GitClub.Services
                 .AddAsync(team, cancellationToken)
                 .ConfigureAwait(false);
 
-            var outboxEvent = OutboxEventUtils.Create(new TeamCreatedMessage
+            TeamCreatedMessage teamCreatedMessage = new TeamCreatedMessage
             {
                 OrganizationId = team.OrganizationId,
                 TeamId = team.Id,
-            }, lastEditedBy: currentUser.UserId);
+            };
+
+            OutboxEvent outboxEvent = OutboxEventUtils.Create(teamCreatedMessage, currentUser);
 
             await applicationDbContext
                 .AddAsync(outboxEvent, cancellationToken)
@@ -59,11 +61,11 @@ namespace GitClub.Services
         {
             _logger.TraceMethodEntry();
 
-            using var applicationDbContext = await _dbContextFactory
+            using ApplicationDbContext applicationDbContext = await _dbContextFactory
                 .CreateDbContextAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            var team = await applicationDbContext.Teams
+            Team? team = await applicationDbContext.Teams
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == teamId, cancellationToken)
                 .ConfigureAwait(false);
@@ -80,11 +82,11 @@ namespace GitClub.Services
         {
             _logger.TraceMethodEntry();
 
-            using var applicationDbContext = await _dbContextFactory
+            using ApplicationDbContext applicationDbContext = await _dbContextFactory
                 .CreateDbContextAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            var teams = await applicationDbContext.Teams
+            List<Team> teams = await applicationDbContext.Teams
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
@@ -96,11 +98,11 @@ namespace GitClub.Services
         {
             _logger.TraceMethodEntry();
 
-            using var applicationDbContext = await _dbContextFactory
+            using ApplicationDbContext applicationDbContext = await _dbContextFactory
                 .CreateDbContextAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            var teams = await applicationDbContext.Teams
+            List<Team> teams = await applicationDbContext.Teams
                 .AsNoTracking()
                 .Where(x => x.OrganizationId == organizationId)
                 .ToListAsync(cancellationToken)
@@ -113,11 +115,11 @@ namespace GitClub.Services
         {
             _logger.TraceMethodEntry();
 
-            using var applicationDbContext = await _dbContextFactory
+            using ApplicationDbContext applicationDbContext = await _dbContextFactory
                 .CreateDbContextAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            var original = await applicationDbContext.Teams.AsNoTracking()
+            Team? original = await applicationDbContext.Teams.AsNoTracking()
                 .Where(x => x.Id == teamId)
                 .FirstOrDefaultAsync(cancellationToken)
                 .ConfigureAwait(false);
@@ -143,7 +145,9 @@ namespace GitClub.Services
                     throw new Exception("Concurrency Exception");
                 }
 
-                var outboxEvent = OutboxEventUtils.Create(new TeamUpdatedMessage { TeamId = teamId }, lastEditedBy: currentUser.UserId);
+                TeamUpdatedMessage teamUpdatedMessage = new TeamUpdatedMessage { TeamId = teamId };
+
+                OutboxEvent outboxEvent = OutboxEventUtils.Create(teamUpdatedMessage, currentUser);
 
                 await applicationDbContext.OutboxEvents
                     .AddAsync(outboxEvent, cancellationToken)
@@ -158,7 +162,7 @@ namespace GitClub.Services
                     .ConfigureAwait(false);
             }
 
-            var updated = await applicationDbContext.Teams.AsNoTracking()
+            Team? updated = await applicationDbContext.Teams.AsNoTracking()
                 .Where(x => x.Id == teamId)
                 .FirstOrDefaultAsync(cancellationToken)
                 .ConfigureAwait(false);
@@ -174,11 +178,12 @@ namespace GitClub.Services
         public async Task DeleteTeamAsync(int teamId, CurrentUser currentUser, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
-            using var applicationDbContext = await _dbContextFactory
+
+            using ApplicationDbContext applicationDbContext = await _dbContextFactory
                 .CreateDbContextAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            var team = await applicationDbContext.Teams.AsNoTracking()
+            Team? team = await applicationDbContext.Teams.AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == teamId, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -198,10 +203,12 @@ namespace GitClub.Services
                         .ConfigureAwait(false);
 
                 // Write Outbox Event at the same time
-                var outboxEvent = OutboxEventUtils.Create(new TeamDeletedMessage
+                TeamDeletedMessage teamDeletedMessage = new TeamDeletedMessage
                 {
                     TeamId = team.Id,
-                }, lastEditedBy: currentUser.UserId);
+                };
+
+                OutboxEvent outboxEvent = OutboxEventUtils.Create(teamDeletedMessage, currentUser);
 
                 await applicationDbContext
                     .AddAsync(outboxEvent, cancellationToken)

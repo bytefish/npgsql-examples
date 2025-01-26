@@ -26,13 +26,13 @@ namespace GitClub.Controllers
             _logger.TraceMethodEntry();
 
             // create a claim for each request scope
-            var userClaims = await userService
+            List<Claim> userClaims = await userService
                 .GetClaimsAsync(credentials.Email, credentials.Roles, cancellationToken)
                 .ConfigureAwait(false);
 
             // Create the ClaimsPrincipal
-            var claimsIdentity = new ClaimsIdentity(userClaims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+            ClaimsIdentity claimsIdentity = new ClaimsIdentity(userClaims, CookieAuthenticationDefaults.AuthenticationScheme);
+            ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
 
             // It's a valid ClaimsPrincipal, sign in
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, new AuthenticationProperties { IsPersistent = credentials.RememberMe });

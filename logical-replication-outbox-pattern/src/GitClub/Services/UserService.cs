@@ -35,7 +35,7 @@ namespace GitClub.Services
                 throw new Exception("Insufficient Permissions to create a new user");
             }
 
-            using var applicationDbContext = await _dbContextFactory
+            using ApplicationDbContext applicationDbContext = await _dbContextFactory
                 .CreateDbContextAsync(cancellationToken)
                 .ConfigureAwait(false);
 
@@ -62,7 +62,7 @@ namespace GitClub.Services
                 throw new Exception("Cannot delete own user");
             }
 
-            using var applicationDbContext = await _dbContextFactory
+            using ApplicationDbContext applicationDbContext = await _dbContextFactory
                 .CreateDbContextAsync(cancellationToken)
                 .ConfigureAwait(false);
 
@@ -98,10 +98,12 @@ namespace GitClub.Services
                         .SetProperty(p => p.LastEditedBy, Users.GhostUserId)
                         .SetProperty(p => p.CreatedBy, Users.GhostUserId));
 
-                var outboxEvent = OutboxEventUtils.Create(new UserDeletedMessage
+                UserDeletedMessage userDeletedMessage = new UserDeletedMessage
                 {
                     UserId = userId,
-                }, lastEditedBy: currentUser.UserId);
+                };
+
+                OutboxEvent outboxEvent = OutboxEventUtils.Create(userDeletedMessage, currentUser);
 
                 await applicationDbContext
                     .AddAsync(outboxEvent, cancellationToken)
@@ -125,7 +127,7 @@ namespace GitClub.Services
                 .CreateDbContextAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            var user = await applicationDbContext.Users.AsNoTracking()
+            User? user = await applicationDbContext.Users.AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Email == email, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -141,11 +143,11 @@ namespace GitClub.Services
         {
             _logger.TraceMethodEntry();
 
-            using var applicationDbContext = await _dbContextFactory
+            using ApplicationDbContext applicationDbContext = await _dbContextFactory
                 .CreateDbContextAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            var user = await applicationDbContext.Users
+            User? user = await applicationDbContext.Users
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Email == email, cancellationToken)
                 .ConfigureAwait(false);
@@ -156,7 +158,7 @@ namespace GitClub.Services
             }
 
             // Build the Claims for the ClaimsPrincipal
-            var claims = CreateClaims(user, roles);
+            List<Claim> claims = CreateClaims(user, roles);
 
             return claims;
         }
@@ -165,12 +167,13 @@ namespace GitClub.Services
         {
             _logger.TraceMethodEntry();
 
-            var claims = new List<Claim>();
-
-            claims.Add(new Claim(ClaimTypes.NameIdentifier, user.Email));
-            claims.Add(new Claim(ClaimTypes.Email, user.Email));
-            claims.Add(new Claim(ClaimTypes.Sid, Convert.ToString(user.Id)));
-            claims.Add(new Claim(ClaimTypes.Name, Convert.ToString(user.PreferredName)));
+            List<Claim> claims =
+            [
+                new Claim(ClaimTypes.NameIdentifier, user.Email),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Sid, Convert.ToString(user.Id)),
+                new Claim(ClaimTypes.Name, Convert.ToString(user.PreferredName)),
+            ];
 
             // Roles:
             foreach (var role in roles)
