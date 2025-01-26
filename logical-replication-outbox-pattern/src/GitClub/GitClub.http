@@ -1,0 +1,30 @@
+@GitClub_HostAddress = https://localhost:5000
+
+### Login as "philipp" and pass the "Administrator" Role
+POST {{GitClub_HostAddress}}/Auth/login
+Content-Type: application/json
+
+{
+    "email": "philipp@bytefish.de",
+    "rememberMe": true,
+    "roles": [ "Administrator", "User" ]
+}
+
+### Get Teams
+GET {{GitClub_HostAddress}}/Teams
+Accept: application/json
+
+### Create new Team "Rockstar Developers"
+POST {{GitClub_HostAddress}}/Teams
+Content-Type: application/json
+
+{
+    "name": "Rockstar Developers #11",
+    "organizationId": 1,
+    "lastEditedBy": 1
+}
+
+### Delete Team "Rockstar Developers"
+DELETE {{GitClub_HostAddress}}/Teams/38187
+Content-Type: application/json
+
